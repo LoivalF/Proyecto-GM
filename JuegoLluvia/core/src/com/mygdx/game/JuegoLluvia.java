@@ -44,8 +44,7 @@ public class JuegoLluvia extends ApplicationAdapter {
             // creacion de la lluvia
             lluvia.crear();
         }
-
-
+        // creacion del sexo
 
         @Override
         public void render () {
