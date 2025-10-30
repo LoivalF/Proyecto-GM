@@ -8,8 +8,8 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.MathUtils;
 
 /**
- * Lápiz tipo "blaster": primero telegraph (warning), luego un rayo vertical que ocupa
- * toda la altura de la arena. El ancho del rayo define el área de daño.
+ * Lápiz tipo "laser": primero telegraph (warning), luego un rayo vertical que ocupa
+ * toda la altura de la arena.
  */
 public class PencilBeamAttack extends Attack {
 
@@ -43,7 +43,7 @@ public class PencilBeamAttack extends Attack {
                             float tTele,
                             float tBeam,
                             int damage) {
-        // NOTA: vx/vy no se usan; el rayo es estático
+
         super(pencilTex, centerX - beamWidth / 2f, arena.y, 0f, 0f, damage);
 
         this.arenaRef = arena;
@@ -106,16 +106,10 @@ public class PencilBeamAttack extends Attack {
         }
     }
 
-    /** Durante TELEGRAPH no debe dañar. */
+
     @Override
     public boolean collidesWith(Rectangle r) {
         if (phase != Phase.BEAM) return false;
         return super.collidesWith(r);
-    }
-
-    @Override
-    public void dispose() {
-        // NO dispose() de 'texture' (la maneja quien la creó/compartió)
-        warnTex.dispose();
     }
 }

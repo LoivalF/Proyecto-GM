@@ -17,8 +17,10 @@ public class Tarro {
 	   private int puntos = 0;
 	   private int velx = 400;
 	   private boolean herido = false;
-	   private int tiempoHeridoMax=50;
+	   private int tiempoHeridoMax = 50;
 	   private int tiempoHerido;
+
+
        private Rectangle limite;
     public Tarro(Texture tex, Sound ss) {
 		   bucketImage = tex;
@@ -40,32 +42,30 @@ public class Tarro {
 		public void sumarPuntos(int pp) {
 			puntos+=pp;
 		}
-        // Setter Zona Rectangular
+        // Setter arena
         public void setZonaLimite(Rectangle zona) { this.limite = zona; }
 	
 	   public void crear() {
            bucket = new Rectangle();
 
            // Tamaño visible + colisión del corazón
-           bucket.width  = 48;   // ajusta a gusto (32, 48, 64…)
+           bucket.width  = 48;
            bucket.height = 48;
 
-           // Centrar en pantalla actual (1920x1080 si tu camera usa eso)
+           // Centrar en pantalla
            float worldW = Gdx.graphics.getWidth();
            float worldH = Gdx.graphics.getHeight();
            bucket.x = worldW / 2f - bucket.width / 2f;
-           bucket.y = 60; // altura inicial; cámbiala si usas zona (p.ej. zona.y + 20)
+           bucket.y = 60;
 	   }
-        // agrega esto en Tarro
+
         public void recibirDanio(int cantidad) {
-            vidas = Math.max(0, vidas - cantidad); // 'vidas' = HP total (20)
+            vidas = Math.max(0, vidas - cantidad);
             herido = true;
             tiempoHerido = tiempoHeridoMax;
             if (sonidoHerido != null) sonidoHerido.play();
         }
 
-        // Mantén el antiguo si quieres compatibilidad:
-        public void dañar() { recibirDanio(1); }
 
     public void dibujar(SpriteBatch batch) {
 		 if (!herido)  
@@ -79,24 +79,19 @@ public class Tarro {
 	   } 
 	   
 	   
-	   public void actualizarMovimiento() { 
-		   // movimiento desde mouse/touch
-		   /*if(Gdx.input.isTouched()) {
-			      Vector3 touchPos = new Vector3();
-			      touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-			      camera.unproject(touchPos);
-			      bucket.x = touchPos.x - 64 / 2;
-			}*/
+	   public void actualizarMovimiento() {
 		   //movimiento desde teclado
 		   if(Gdx.input.isKeyPressed(Input.Keys.LEFT)) bucket.x -= velx * Gdx.graphics.getDeltaTime();
 		   if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)) bucket.x += velx * Gdx.graphics.getDeltaTime();
            if(Gdx.input.isKeyPressed(Input.Keys.UP)) bucket.y += velx * Gdx.graphics.getDeltaTime();
            if(Gdx.input.isKeyPressed(Input.Keys.DOWN)) bucket.y -= velx * Gdx.graphics.getDeltaTime();
            clamp();
+
+
 	   }
     private void clamp() {
         if (limite != null) {
-            // Limita dentro de la caja Undertale
+            // Limita dentro de la caja
             float minX = limite.x;
             float minY = limite.y;
             float maxX = limite.x + limite.width  - bucket.width;
@@ -107,7 +102,7 @@ public class Tarro {
             if (bucket.x > maxX) bucket.x = maxX;
             if (bucket.y > maxY) bucket.y = maxY;
         } else {
-            // Limita a los bordes de la “pantalla” del mundo actual
+            // Limita a los bordes de la pantalla
             float worldW = Gdx.graphics.getWidth();
             float worldH = Gdx.graphics.getHeight();
 
@@ -121,10 +116,15 @@ public class Tarro {
 
     public void destruir() {
 		    bucketImage.dispose();
-	   }
-	
-   public boolean estaHerido() {
+    }
+
+    public boolean estaHerido() {
 	   return herido;
-   }
-	   
+    }
+    public int getTiempoHeridoMax() { return tiempoHeridoMax; }
+
+    public void recuperarSalud(int salud) {
+        if (vidas > 17) { vidas = 20; }
+        else { vidas += salud; }
+    }
 }
