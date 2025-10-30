@@ -4,6 +4,7 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Timer;
 
 public class Boss {
     private float timer;
@@ -85,7 +86,12 @@ public class Boss {
             PencilBeamAttack p = new PencilBeamAttack(texPencil, zona, x, 56f, 0.6f, 0.6f, 3);
             p.setSpeedFactor(manager.getSpeedFactor());
             manager.spawn(p);
-            beamSound.play(0.1f);
+            Timer.schedule(new Timer.Task() {
+                @Override
+                public void run() {
+                    beamSound.play(0.5f);
+                }
+            }, 0.6f);
         }
 
         // Lapices y papeles
