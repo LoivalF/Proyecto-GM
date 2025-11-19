@@ -8,6 +8,13 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -15,6 +22,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+
+import static com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.table;
 
 public class JuegoLluvia extends ApplicationAdapter {
     private OrthographicCamera camera;
@@ -30,6 +40,7 @@ public class JuegoLluvia extends ApplicationAdapter {
     private Texture texPaper, texPencil, texHealthPickup, texSlowPickup;
     private Sound paperSpawnSnd, pencilSpawnSnd, beamWarnSnd, healthSound;
     private Music bgMusic;
+    private Music bgMusicMenu ; //Musica del Menu solamente
     private Boss boss;
 
     private float survived; // tiempo sobrevivido (segundos)
@@ -38,8 +49,19 @@ public class JuegoLluvia extends ApplicationAdapter {
     private boolean freezeActive = false;
     private int score;
 
+    public enum Estado {MENU, TUTORIAL, JUEGO}
+    public Estado estado = Estado.MENU;
+    private Stage stageMenu;
+    private Stage stageTutorial;
+    private Stage stageJuego ;
+    private Skin skin;
+    private TextButton btnInicio, btnTutorial, btnSalir, btnVolver;
+    private Texture teclasImg ;
+    private Texture fondoMenu, fondoTutorial ;
+
+
     @Override
-    public void create () {
+    public void create() {
         // Fuente personalizada
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/dete.otf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
@@ -50,8 +72,11 @@ public class JuegoLluvia extends ApplicationAdapter {
 
         // Imagen y sonido corazon
         Sound hurtSound = Gdx.audio.newSound(Gdx.files.internal("sounds/damage.ogg"));
-        tarro = new Tarro(new Texture(Gdx.files.internal("images/heartMouse.png")),hurtSound);
+        tarro = new Tarro(new Texture(Gdx.files.internal("images/heartMouse.png")), hurtSound);
 
+        //fondo del menu
+        fondoMenu = new Texture(Gdx.files.internal("images/menuFondo.png"));
+        fondoTutorial = new Texture(Gdx.files.internal("images/fondoTutorial.jpeg"));
 
         // camera
         camera = new OrthographicCamera();
@@ -74,7 +99,7 @@ public class JuegoLluvia extends ApplicationAdapter {
         pickups = new Array<Pickup>();
 
         // Texturas de ataques y pickups
-        texPaper  = new Texture(Gdx.files.internal("images/hojaarru.png"));
+        texPaper = new Texture(Gdx.files.internal("images/hojaarru.png"));
         texPencil = new Texture(Gdx.files.internal("images/lapiz.png"));
         texHealthPickup = new Texture(Gdx.files.internal("images/pinguinito.png"));
         texSlowPickup = new Texture(Gdx.files.internal("images/monster.png"));
@@ -84,19 +109,23 @@ public class JuegoLluvia extends ApplicationAdapter {
         texSlowPickup.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
         // Sonidos de spawn
-        paperSpawnSnd  = Gdx.audio.newSound(Gdx.files.internal("sounds/papel.ogg"));
+        paperSpawnSnd = Gdx.audio.newSound(Gdx.files.internal("sounds/papel.ogg"));
         pencilSpawnSnd = Gdx.audio.newSound(Gdx.files.internal("sounds/warning.ogg"));
         beamWarnSnd = Gdx.audio.newSound(Gdx.files.internal("sounds/wall.ogg"));
 
         // Pickups
         healthSound = Gdx.audio.newSound(Gdx.files.internal("sounds/heal.ogg"));
 
+        //Musica del Menu
+        bgMusicMenu = Gdx.audio.newMusic(Gdx.files.internal("sounds/menuMusic.mp3")) ;
+        bgMusicMenu.setLooping(true) ;
+        bgMusicMenu.setVolume(0.5f) ;
+        bgMusicMenu.play() ;
 
-        // Musica
+        //Musica del Juego
         bgMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/asgore.mp3"));
         bgMusic.setLooping(true);
         bgMusic.setVolume(0.5f);
-        bgMusic.play();
 
         // estado
         survived = 0f;
@@ -104,108 +133,239 @@ public class JuegoLluvia extends ApplicationAdapter {
 
         boss = new Boss(attackMgr, zona, texPaper, texPencil,
                 paperSpawnSnd, pencilSpawnSnd, beamWarnSnd);
+
+        //Skin botones menu
+        skin = new Skin(Gdx.files.internal("uiskin.json")) ;
+        stageMenu = new Stage(new ScreenViewport()) ;
+        Gdx.input.setInputProcessor(stageMenu) ;
+
+        Table table = new Table();
+        table.setFillParent(true);
+        stageMenu.addActor(table);
+
+        //titulo del juego
+        Label titulo = new Label("JUEGO SINOMBRE", skin) ;
+        titulo.setFontScale(2.5f) ;
+        titulo.setColor(Color.WHITE) ;
+        table.add(titulo).padBottom(40).row();
+
+        //botones
+        btnInicio = new TextButton("Iniciar Juego", skin) ;
+        btnTutorial = new TextButton("Tutorial", skin) ;
+        btnSalir = new TextButton("Salir", skin) ;
+
+        table.add(btnInicio).width(250).height(50).pad(10).row();
+        table.add(btnTutorial).width(250).height(50).pad(10).row();
+        table.add(btnSalir).width(250).height(50).pad(10);
+
+        btnInicio.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (bgMusicMenu.isPlaying()) bgMusic.stop() ;
+                estado = Estado.JUEGO;
+
+                bgMusic.setPosition(0);
+                bgMusic.play() ;
+            }
+        });
+
+        btnTutorial.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                estado = Estado.TUTORIAL;
+                Gdx.input.setInputProcessor(stageTutorial);
+            }
+        });
+        btnSalir.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Gdx.app.exit();
+            }
+        });
+        //Tutorial
+        stageTutorial = new Stage(new ScreenViewport()) ;
+        Table tutorialTable = new Table() ;
+        tutorialTable.setFillParent(true) ;
+        stageTutorial.addActor(tutorialTable) ;
+
+        TextButton btnVolverTutorial = new TextButton("Volver", skin);
+        btnVolverTutorial.setSize(200, 60); //BOTON EN EL TUTORIAL
+
+        btnVolverTutorial.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                estado = Estado.MENU;
+                bgMusicMenu.setPosition(0);
+                bgMusicMenu.play();
+                Gdx.input.setInputProcessor(stageMenu);
+            }
+        });
+        tutorialTable.row().expandY() ;
+        tutorialTable.add(btnVolverTutorial).width(200).height(60).bottom().padBottom(50);
+
+        //BOTON VOLVER PARA CUANDO SE ESTÉ JUGANDO
+        stageJuego = new Stage(new ScreenViewport()) ;
+        btnVolver = new TextButton("Volver", skin) ;
+        btnVolver.setSize(200, 60) ;
+        btnVolver.setPosition(20, 20);
+        btnVolver.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if(bgMusic.isPlaying()) bgMusic.stop() ;
+                estado = Estado.MENU ;
+                bgMusicMenu.setPosition(0);
+                bgMusicMenu.play() ;
+                Gdx.input.setInputProcessor(stageMenu) ;
+            }
+        }) ;
+        stageJuego.addActor((btnVolver));
+        teclasImg = new Texture(Gdx.files.internal("images/teclas.png")) ;
     }
 
+    private void renderTutorial(){
+        ScreenUtils.clear(0, 0, 0, 1);
 
+        batch.setProjectionMatrix(camera.combined) ;
+        batch.begin() ;
+        batch.draw(fondoTutorial, 0, 0, 1920, 1080) ;
+
+        font.getData().setScale(2f) ;
+        font.draw(batch, "TUTORIAL DE CONTROLES", 1920 / 2f - 370, 950) ;
+        font.getData().setScale(1.3f) ;
+        font.draw(batch, "Usa las flechas para moverte en el escenario.\n"+"Esquiva los ataques y recoge mejoras.\n"+"Sobrevive el mayor tiempo posible", 1920 / 2f - 450, 800) ;
+
+        float iw = teclasImg.getWidth() ;
+        float ih = teclasImg.getHeight() ;
+        float scale = 0.8f ;
+        float dw = iw * scale ;
+        float dh = ih * scale ;
+        float x = 1920 /2f - dw / 2f ;
+        float y = 200;
+
+        batch.draw(teclasImg, x, y, dw, dh) ;
+        batch.end() ;
+        stageTutorial.act(Gdx.graphics.getDeltaTime()) ;
+        stageTutorial.draw();
+    }
 
     @Override
     public void render () {
-        // Fondo
-        ScreenUtils.clear(0, 0, 0, 1);
-        camera.update();
-
-        // Dibuja la caja "arena"
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(Color.WHITE);
-        shapeRenderer.rect(zona.x, zona.y, zona.width, zona.height);
-        shapeRenderer.end();
-
-        // Lógica de juego
         float dt = Gdx.graphics.getDeltaTime();
 
-        // Movimiento del jugador
-        if (freezeTimer > 0) {
-            freezeTimer -= dt;
-        }
-        else {
-            if (!tarro.estaHerido()) {
-                tarro.actualizarMovimiento();
-            }
+        switch(estado){
+            case MENU:
+                ScreenUtils.clear(0, 0, 0, 1) ;
 
-            // Tiempo y puntaje
-            survived += dt;
-            score = (int) (survived * 10); // 10 puntos por segundo
+                batch.begin() ;
+                batch.draw(new Texture(Gdx.files.internal("images/menuFondo.png")), 0, 0, 1920, 1080) ;
+                batch.end() ;
 
-            // Boss y ataques
-            boss.update(dt);
-            attackMgr.update(dt, zona);
-            attackMgr.checkHit(tarro);
-            attackMgr.clearInactive();
-        }
+                stageMenu.act(dt) ;
+                stageMenu.draw() ;
+                break ;
+            case TUTORIAL:
+                renderTutorial();
+                break ;
+            case JUEGO:
+                Gdx.input.setInputProcessor(stageJuego) ;
+                // Fondo
+                ScreenUtils.clear(0, 0, 0, 1);
+                camera.update();
 
-        // Pickups
-        pickupTimer += dt;
-        // Uno cada 5 seg
-        if (score < 1000) {
-            if (pickupTimer >= 5) {
-                pickupTimer = 0;
+                // Dibuja la caja "arena"
+                shapeRenderer.setProjectionMatrix(camera.combined);
+                shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+                shapeRenderer.setColor(Color.WHITE);
+                shapeRenderer.rect(zona.x, zona.y, zona.width, zona.height);
+                shapeRenderer.end();
 
-                // Coordenadas random para los pickups
-                float x = MathUtils.random(zona.x + 50, zona.x + zona.width - 50);
-                float y = zona.y + zona.height - 50;
-
-                // 50% probabilidad de ser pinguinito o monster
-                if (MathUtils.randomBoolean()) {
-                    pickups.add(new HealthPickup(texHealthPickup, x, y, healthSound));
-                } else {
-                    pickups.add(new SlowPickup(texSlowPickup, x, y, attackMgr));
+                // Movimiento del jugador
+                if (freezeTimer > 0) {
+                    freezeTimer -= dt;
                 }
-            }
+                else {
+                    if (!tarro.estaHerido()) {
+                        tarro.actualizarMovimiento();
+                    }
+
+                    // Tiempo y puntaje
+                    survived += dt;
+                    score = (int) (survived * 10); // 10 puntos por segundo
+
+                    // Boss y ataques
+                    boss.update(dt);
+                    attackMgr.update(dt, zona);
+                    attackMgr.checkHit(tarro);
+                    attackMgr.clearInactive();
+                }
+
+                // Pickups
+                pickupTimer += dt;
+                // Uno cada 5 seg
+                if (score < 1000) {
+                    if (pickupTimer >= 5) {
+                        pickupTimer = 0;
+
+                        // Coordenadas random para los pickups
+                        float x = MathUtils.random(zona.x + 50, zona.x + zona.width - 50);
+                        float y = zona.y + zona.height - 50;
+
+                        // 50% probabilidad de ser pinguinito o monster
+                        if (MathUtils.randomBoolean()) {
+                            pickups.add(new HealthPickup(texHealthPickup, x, y, healthSound));
+                        } else {
+                            pickups.add(new SlowPickup(texSlowPickup, x, y, attackMgr));
+                        }
+                    }
+                }
+
+                // Pausa al ser herido
+                if (tarro.estaHerido() && !freezeActive) {
+                    freezeTimer = tarro.getTiempoHeridoMax();
+                    freezeActive = true;
+                }
+                if (!tarro.estaHerido()) {
+                    freezeActive = false;
+                }
+
+                // Dibujo de sprites y HUD
+                batch.setProjectionMatrix(camera.combined);
+                batch.begin();
+
+                // HUD
+                font.draw(batch, "HP: " + tarro.getVidas() + "/20", 560, 100);
+                font.draw(batch, "Puntaje: " + score, 850, 100);
+                font.draw(batch, "Tiempo: " + (int) survived + "s", 1175, 100);
+
+                // Jugador y ataques
+                tarro.dibujar(batch);
+                attackMgr.draw(batch);
+
+                // Pickups
+                for (Pickup  p : pickups) {
+                    if (freezeTimer <= 0) {
+                        p.update(dt);
+                    }
+                    p.draw(batch);
+
+                    if (p.isActive() && freezeTimer <= 0 && p.getBounds().overlaps(tarro.getArea())) {
+                        p.applyEffect(tarro);
+                    }
+                }
+
+                // Eliminar pickups inactivos
+                for (int i = pickups.size - 1; i >= 0; i--) {
+                    if (!pickups.get(i).isActive()) {
+                        pickups.removeIndex(i);
+                    }
+                }
+
+                batch.end();
+                stageJuego.act(dt) ;
+                stageJuego.draw() ;
+                break ;
         }
 
-        // Pausa al ser herido
-        if (tarro.estaHerido() && !freezeActive) {
-            freezeTimer = tarro.getTiempoHeridoMax();
-            freezeActive = true;
-        }
-        if (!tarro.estaHerido()) {
-            freezeActive = false;
-        }
-
-        // Dibujo de sprites y HUD
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-
-        // HUD
-        font.draw(batch, "HP: " + tarro.getVidas() + "/20", 560, 100);
-        font.draw(batch, "Puntaje: " + score, 850, 100);
-        font.draw(batch, "Tiempo: " + (int) survived + "s", 1175, 100);
-
-        // Jugador y ataques
-        tarro.dibujar(batch);
-        attackMgr.draw(batch);
-
-        // Pickups
-        for (Pickup  p : pickups) {
-            if (freezeTimer <= 0) {
-                p.update(dt);
-            }
-            p.draw(batch);
-
-            if (p.isActive() && freezeTimer <= 0 && p.getBounds().overlaps(tarro.getArea())) {
-                p.applyEffect(tarro);
-            }
-        }
-
-        // Eliminar pickups inactivos
-        for (int i = pickups.size - 1; i >= 0; i--) {
-            if (!pickups.get(i).isActive()) {
-                pickups.removeIndex(i);
-            }
-        }
-
-        batch.end();
     }
 
     @Override
@@ -225,5 +385,11 @@ public class JuegoLluvia extends ApplicationAdapter {
         shapeRenderer.dispose();
         batch.dispose();
         font.dispose();
+
+        //Menu
+        stageMenu.dispose() ;
+        skin.dispose() ;
+        teclasImg.dispose() ;
+        fondoMenu.dispose() ;
     }
 }
