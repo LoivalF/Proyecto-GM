@@ -2,9 +2,10 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.math.Rectangle;
 
-public abstract class Attack {
+public abstract class Attack implements AttackStrategy {
     protected final Texture texture;
     protected final Rectangle bounds;
     protected float vx, vy;
@@ -40,7 +41,11 @@ public abstract class Attack {
     // Getters
     public boolean isActive() { return active; }
     public int getDamage()   { return damage; }
-    public void setSpeedFactor(float mult) {
-        this.speedFactor = mult;
+
+    @Override
+    public void setSpeedFactor(float factor) {
+        this.speedFactor = factor;
+        vx *= factor;
+        vy *= factor;
     }
 }

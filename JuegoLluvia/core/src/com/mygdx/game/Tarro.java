@@ -52,11 +52,13 @@ public class Tarro {
            bucket.width  = 48;
            bucket.height = 48;
 
-           // Centrar en pantalla
-           float worldW = Gdx.graphics.getWidth();
-           float worldH = Gdx.graphics.getHeight();
-           bucket.x = worldW / 2f - bucket.width / 2f;
-           bucket.y = 60;
+           if (limite != null) {
+               bucket.x = limite.x + 10;
+               bucket.y = limite.y + 10;
+           } else {
+               bucket.x = 20;
+               bucket.y = 20;
+           }
 	   }
 
         public void recibirDanio(int cantidad) {

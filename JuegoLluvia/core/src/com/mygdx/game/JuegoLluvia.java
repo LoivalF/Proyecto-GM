@@ -22,6 +22,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import static com.badlogic.gdx.scenes.scene2d.ui.Table.Debug.table;
@@ -58,6 +59,9 @@ public class JuegoLluvia extends ApplicationAdapter {
     private TextButton btnInicio, btnTutorial, btnSalir, btnVolver;
     private Texture teclasImg ;
     private Texture fondoMenu, fondoTutorial ;
+
+    public static final float UI_WIDTH = 1920;
+    public static final float UI_HEIGHT = 1080;
 
 
     @Override
@@ -136,7 +140,7 @@ public class JuegoLluvia extends ApplicationAdapter {
 
         //Skin botones menu
         skin = new Skin(Gdx.files.internal("uiskin.json")) ;
-        stageMenu = new Stage(new ScreenViewport()) ;
+        stageMenu = new Stage(new FitViewport(UI_WIDTH, UI_HEIGHT));
         Gdx.input.setInputProcessor(stageMenu) ;
 
         Table table = new Table();
@@ -161,11 +165,13 @@ public class JuegoLluvia extends ApplicationAdapter {
         btnInicio.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (bgMusicMenu.isPlaying()) bgMusic.stop() ;
+
+                if (bgMusicMenu.isPlaying()) bgMusicMenu.stop();
+
                 estado = Estado.JUEGO;
 
                 bgMusic.setPosition(0);
-                bgMusic.play() ;
+                bgMusic.play();
             }
         });
 
@@ -183,7 +189,7 @@ public class JuegoLluvia extends ApplicationAdapter {
             }
         });
         //Tutorial
-        stageTutorial = new Stage(new ScreenViewport()) ;
+        stageTutorial = new Stage(new FitViewport(UI_WIDTH, UI_HEIGHT));
         Table tutorialTable = new Table() ;
         tutorialTable.setFillParent(true) ;
         stageTutorial.addActor(tutorialTable) ;
@@ -204,7 +210,7 @@ public class JuegoLluvia extends ApplicationAdapter {
         tutorialTable.add(btnVolverTutorial).width(200).height(60).bottom().padBottom(50);
 
         //BOTON VOLVER PARA CUANDO SE ESTÉ JUGANDO
-        stageJuego = new Stage(new ScreenViewport()) ;
+        stageJuego = new Stage(new FitViewport(UI_WIDTH, UI_HEIGHT));
         btnVolver = new TextButton("Volver", skin) ;
         btnVolver.setSize(200, 60) ;
         btnVolver.setPosition(20, 20);
@@ -227,7 +233,11 @@ public class JuegoLluvia extends ApplicationAdapter {
 
         batch.setProjectionMatrix(camera.combined) ;
         batch.begin() ;
-        batch.draw(fondoTutorial, 0, 0, 1920, 1080) ;
+        batch.draw(fondoTutorial,
+                0, 0,
+                stageMenu.getViewport().getWorldWidth(),
+                stageMenu.getViewport().getWorldHeight()
+        );
 
         font.getData().setScale(2f) ;
         font.draw(batch, "TUTORIAL DE CONTROLES", 1920 / 2f - 370, 950) ;
@@ -256,8 +266,13 @@ public class JuegoLluvia extends ApplicationAdapter {
             case MENU:
                 ScreenUtils.clear(0, 0, 0, 1) ;
 
+                batch.setProjectionMatrix(camera.combined);
                 batch.begin() ;
-                batch.draw(new Texture(Gdx.files.internal("images/menuFondo.png")), 0, 0, 1920, 1080) ;
+                batch.draw(fondoMenu,
+                        0, 0,
+                        Gdx.graphics.getWidth(),
+                        Gdx.graphics.getHeight()
+                );
                 batch.end() ;
 
                 stageMenu.act(dt) ;

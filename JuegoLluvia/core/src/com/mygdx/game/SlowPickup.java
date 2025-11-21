@@ -36,7 +36,7 @@ public class SlowPickup implements Pickup {
     public void applyEffect(Tarro player) {
         if (!active) return;
         active = false;
-        attackMgr.slowAll(0.5f, 5f); // mitad de velocidad
+        attackMgr.slowAll(0.7f, 5f); // menos velocidad
     }
 
     @Override

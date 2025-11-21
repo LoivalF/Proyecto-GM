@@ -6,9 +6,8 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Timer;
 
-public class Boss {
-    private float timer;
-    private int phase = 1;
+public class Boss extends BossTemplate {
+
     private float spawnCooldown = 0f;
     private AttackManager manager;
     private Texture texPaper, texPencil;
@@ -98,28 +97,22 @@ public class Boss {
         spawnPattern(0.65f, 0.66f, 0.33f);
     }
 
-    public void update(float dt) {
-        // Dificultad
-        timer += dt;
-        spawnCooldown -= dt*2.5f;
+    @Override
+    protected void seleccionarFase(float time) {
+        if (time > 100) { phase = 0; }
+        else if (time > 70) { phase = 3; }
+        else if (time > 65) { phase = 0; }
+        else if (time > 35) { phase = 2; }
+        else if (time > 30) { phase = 0; }
+        else phase = 1;
+    }
 
-        // Actualizar fase según tiempo
-        if (timer > 100) {
-            phase = 0;
-        } else if (timer > 70) {
-            phase = 3;
-        }  else if (timer > 65) {
-            phase = 0;
-        } else if (timer > 35) {
-            phase = 2;
-        } else if (timer > 30) {
-          phase = 0;
-        } else {
-            phase = 1;
-        }
+    @Override
+    protected void ejecutarFase(float dt) {
+        spawnCooldown -= dt * 2.5f;
 
-        // Controlar cooldown
         if (spawnCooldown <= 0) {
+
             if (phase == 3) spawnCooldown = 0.7f;
             else if (phase == 2) spawnCooldown = 0.4f;
             else spawnCooldown = 0.5f;
@@ -127,18 +120,12 @@ public class Boss {
             float x = MathUtils.random(zona.x + 32, zona.x + zona.width - 32);
             float y = zona.y + zona.height - 32;
 
-            if (phase == 1) {
-                phase1(x, y);
-            } else if (phase == 2) {
-                phase2(x, y);
-            } else if (phase == 3) {
-                phase3(x, y);
+            switch (phase) {
+                case 1: phase1(x, y); break;
+                case 2: phase2(x, y); break;
+                case 3: phase3(x, y); break;
             }
         }
-    }
-
-    public boolean finished() {
-        return timer >= 100;
     }
 }
 
