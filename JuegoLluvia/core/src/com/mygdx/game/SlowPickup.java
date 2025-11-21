@@ -10,9 +10,9 @@ public class SlowPickup implements Pickup {
     private boolean active = true;
     private AttackManager attackMgr;
 
-    public SlowPickup(Texture tex, float x, float y, AttackManager attackMgr) {
+    public SlowPickup(Texture tex, float x, float y) {
         this.texture = tex;
-        this.attackMgr = attackMgr;
+        this.attackMgr = AttackManager.getInstance();
         this.bounds = new Rectangle(x, y, 16, 38);
     }
 

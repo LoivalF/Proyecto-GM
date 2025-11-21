@@ -9,15 +9,14 @@ import com.badlogic.gdx.utils.Timer;
 public class Boss extends BossTemplate {
 
     private float spawnCooldown = 0f;
-    private AttackManager manager;
     private Texture texPaper, texPencil;
     private Sound paperSound, pencilSound, beamSound;
     private Rectangle zona;
+    private AttackManager manager = AttackManager.getInstance();
 
-    public Boss(AttackManager mgr, Rectangle zona,
+    public Boss(Rectangle zona,
                 Texture texPaper, Texture texPencil,
                 Sound paperSound, Sound pencilSound, Sound beamSound) {
-        this.manager = mgr;
         this.zona = zona;
         this.texPaper = texPaper;
         this.texPencil = texPencil;

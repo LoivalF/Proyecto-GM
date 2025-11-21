@@ -5,6 +5,16 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 
 public class AttackManager {
+    // NUESTRO SINGLETON :D
+    private static AttackManager instance;
+    private AttackManager() { }
+    public static AttackManager getInstance() {
+        if (instance == null) {
+            instance = new AttackManager();
+        }
+        return instance;
+    }
+
     private final Array<AttackStrategy> attacks = new Array<>();
     private float slowTimer = 0f;
     private float speedFactor = 1f;

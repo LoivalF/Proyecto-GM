@@ -97,7 +97,7 @@ public class JuegoLluvia extends ApplicationAdapter {
         tarro.crear();
         tarro.setZonaLimite(zona);
         // Manager de ataques
-        attackMgr = new AttackManager();
+        attackMgr = AttackManager.getInstance();
 
         // Pickups
         pickups = new Array<Pickup>();
@@ -135,7 +135,7 @@ public class JuegoLluvia extends ApplicationAdapter {
         survived = 0f;
         score = 0;
 
-        boss = new Boss(attackMgr, zona, texPaper, texPencil,
+        boss = new Boss(zona, texPaper, texPencil,
                 paperSpawnSnd, pencilSpawnSnd, beamWarnSnd);
 
         //Skin botones menu
@@ -329,7 +329,7 @@ public class JuegoLluvia extends ApplicationAdapter {
                         if (MathUtils.randomBoolean()) {
                             pickups.add(new HealthPickup(texHealthPickup, x, y, healthSound));
                         } else {
-                            pickups.add(new SlowPickup(texSlowPickup, x, y, attackMgr));
+                            pickups.add(new SlowPickup(texSlowPickup, x, y));
                         }
                     }
                 }
