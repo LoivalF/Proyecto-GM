@@ -38,7 +38,7 @@ public class JuegoLluvia extends ApplicationAdapter {
     private ShapeRenderer shapeRenderer;
     private Rectangle zona;// la “caja” donde se mueve el corazón
     private AttackManager attackMgr;
-    private Texture texPaper, texPencil, texHealthPickup, texSlowPickup;
+    private Texture texPaper, texPencil, texGoma, texHealthPickup, texSlowPickup;
     private Sound paperSpawnSnd, pencilSpawnSnd, beamWarnSnd, healthSound;
     private Music bgMusic;
     private Music bgMusicMenu ; //Musica del Menu solamente
@@ -50,13 +50,14 @@ public class JuegoLluvia extends ApplicationAdapter {
     private boolean freezeActive = false;
     private int score;
 
-    public enum Estado {MENU, TUTORIAL, JUEGO}
+    public enum Estado {MENU, TUTORIAL, JUEGO, GAMEOVER} ;
     public Estado estado = Estado.MENU;
     private Stage stageMenu;
     private Stage stageTutorial;
     private Stage stageJuego ;
+    private Stage stageGameOver ;
     private Skin skin;
-    private TextButton btnInicio, btnTutorial, btnSalir, btnVolver;
+    private TextButton btnInicio, btnTutorial, btnSalir, btnVolver, btnReintentar, btnMenu;
     private Texture teclasImg ;
     private Texture fondoMenu, fondoTutorial ;
 
@@ -105,6 +106,7 @@ public class JuegoLluvia extends ApplicationAdapter {
         // Texturas de ataques y pickups
         texPaper = new Texture(Gdx.files.internal("images/hojaarru.png"));
         texPencil = new Texture(Gdx.files.internal("images/lapiz.png"));
+        texGoma = new Texture(Gdx.files.internal("images/goma.png")); //textura para segunda fase de ataque
         texHealthPickup = new Texture(Gdx.files.internal("images/pinguinito.png"));
         texSlowPickup = new Texture(Gdx.files.internal("images/monster.png"));
         texPaper.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
@@ -135,8 +137,7 @@ public class JuegoLluvia extends ApplicationAdapter {
         survived = 0f;
         score = 0;
 
-        boss = new Boss(zona, texPaper, texPencil,
-                paperSpawnSnd, pencilSpawnSnd, beamWarnSnd);
+        boss = new Boss(zona, texPaper, texPencil, texGoma, paperSpawnSnd, pencilSpawnSnd, beamWarnSnd);
 
         //Skin botones menu
         skin = new Skin(Gdx.files.internal("uiskin.json")) ;
@@ -149,18 +150,21 @@ public class JuegoLluvia extends ApplicationAdapter {
 
         //titulo del juego
         Label titulo = new Label("JUEGO SINOMBRE", skin) ;
-        titulo.setFontScale(2.5f) ;
+        titulo.setFontScale(4f) ;
         titulo.setColor(Color.WHITE) ;
         table.add(titulo).padBottom(40).row();
 
         //botones
         btnInicio = new TextButton("Iniciar Juego", skin) ;
+        btnInicio.getLabel().setFontScale(2f);
         btnTutorial = new TextButton("Tutorial", skin) ;
+        btnTutorial.getLabel().setFontScale(2f);
         btnSalir = new TextButton("Salir", skin) ;
+        btnSalir.getLabel().setFontScale(2f);
 
-        table.add(btnInicio).width(250).height(50).pad(10).row();
-        table.add(btnTutorial).width(250).height(50).pad(10).row();
-        table.add(btnSalir).width(250).height(50).pad(10);
+        table.add(btnInicio).width(400).height(90).pad(15).row();
+        table.add(btnTutorial).width(400).height(90).pad(15).row();
+        table.add(btnSalir).width(400).height(90).pad(15);
 
         btnInicio.addListener(new ClickListener() {
             @Override
@@ -196,7 +200,8 @@ public class JuegoLluvia extends ApplicationAdapter {
 
         TextButton btnVolverTutorial = new TextButton("Volver", skin);
         btnVolverTutorial.setSize(200, 60); //BOTON EN EL TUTORIAL
-
+        tutorialTable.row().expandY() ;
+        tutorialTable.add(btnVolverTutorial).width(200).height(60).bottom().padBottom(50);
         btnVolverTutorial.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -206,8 +211,6 @@ public class JuegoLluvia extends ApplicationAdapter {
                 Gdx.input.setInputProcessor(stageMenu);
             }
         });
-        tutorialTable.row().expandY() ;
-        tutorialTable.add(btnVolverTutorial).width(200).height(60).bottom().padBottom(50);
 
         //BOTON VOLVER PARA CUANDO SE ESTÉ JUGANDO
         stageJuego = new Stage(new FitViewport(UI_WIDTH, UI_HEIGHT));
@@ -226,6 +229,47 @@ public class JuegoLluvia extends ApplicationAdapter {
         }) ;
         stageJuego.addActor((btnVolver));
         teclasImg = new Texture(Gdx.files.internal("images/teclas.png")) ;
+
+        stageGameOver = new Stage(new FitViewport(UI_WIDTH, UI_HEIGHT));
+
+        // Tabla
+        Table tableGO = new Table();
+        tableGO.setFillParent(true);
+        stageGameOver.addActor(tableGO);
+
+        // Botones
+        btnReintentar = new TextButton("Reintentar", skin);
+        btnReintentar.getLabel().setFontScale(2f);
+
+        btnMenu = new TextButton("Menu", skin);
+        btnMenu.getLabel().setFontScale(2f);
+
+        tableGO.add(btnReintentar).width(400).height(90).pad(20).row();
+        tableGO.add(btnMenu).width(400).height(90).pad(20);
+        btnMenu.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                estado = Estado.MENU;
+                bgMusicMenu.setPosition(0);
+                bgMusicMenu.play();
+                Gdx.input.setInputProcessor(stageMenu);
+            }
+        }) ;
+        btnReintentar.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                survived = 0 ;
+                score = 0 ;
+                tarro.setVidas(20) ;
+                pickups.clear();
+                attackMgr.clearInactive() ;
+
+                estado = Estado.JUEGO;
+                bgMusic.setPosition(0);
+                bgMusic.play();
+                Gdx.input.setInputProcessor(stageJuego);
+            }
+        }) ;
     }
 
     private void renderTutorial(){
@@ -282,7 +326,6 @@ public class JuegoLluvia extends ApplicationAdapter {
                 renderTutorial();
                 break ;
             case JUEGO:
-                Gdx.input.setInputProcessor(stageJuego) ;
                 // Fondo
                 ScreenUtils.clear(0, 0, 0, 1);
                 camera.update();
@@ -352,6 +395,13 @@ public class JuegoLluvia extends ApplicationAdapter {
                 font.draw(batch, "Puntaje: " + score, 850, 100);
                 font.draw(batch, "Tiempo: " + (int) survived + "s", 1175, 100);
 
+                if (tarro.getVidas() <= 0 || survived >= 120){ //Termina el juego si se acaban las vidas
+                    estado = Estado.GAMEOVER;
+                    if (bgMusic.isPlaying()) bgMusic.stop();
+                    Gdx.input.setInputProcessor(stageGameOver); //cambia al imput del menu, no se, me gustaría cambiarlo
+                    return ;
+                }
+
                 // Jugador y ataques
                 tarro.dibujar(batch);
                 attackMgr.draw(batch);
@@ -379,8 +429,22 @@ public class JuegoLluvia extends ApplicationAdapter {
                 stageJuego.act(dt) ;
                 stageJuego.draw() ;
                 break ;
-        }
 
+            case GAMEOVER:
+                ScreenUtils.clear(0, 0, 0, 1);
+                batch.begin() ;
+                font.getData().setScale(4f);
+                font.draw(batch, "GAME OVER", 700, 800);
+
+                font.getData().setScale(2f);
+                font.draw(batch, "Puntaje: " + score, 780, 500);
+                font.draw(batch, "Presiona 'Volver' para regresar al menú", 580, 400);
+                batch.end();
+
+                stageGameOver.act(dt);
+                stageGameOver.draw();
+                break;
+        }
     }
 
     @Override
@@ -391,6 +455,9 @@ public class JuegoLluvia extends ApplicationAdapter {
         // ataques (texturas y sonidos compartidos)
         texPaper.dispose();
         texPencil.dispose();
+        texGoma.dispose() ;
+        texHealthPickup.dispose();
+        texSlowPickup.dispose();
         paperSpawnSnd.dispose();
         pencilSpawnSnd.dispose();
         beamWarnSnd.dispose();
@@ -406,5 +473,6 @@ public class JuegoLluvia extends ApplicationAdapter {
         skin.dispose() ;
         teclasImg.dispose() ;
         fondoMenu.dispose() ;
+        fondoTutorial.dispose() ;
     }
 }

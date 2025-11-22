@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 
 public class AttackManager {
-    // NUESTRO SINGLETON :D
+    //NUESTRO SINGLETON
     private static AttackManager instance;
     private AttackManager() { }
     public static AttackManager getInstance() {
@@ -20,7 +20,6 @@ public class AttackManager {
     private float speedFactor = 1f;
 
     public void spawn(AttackStrategy a) { attacks.add(a); }
-
     public void update(float dt, Rectangle arena) {
         if (slowTimer > 0f) {
             slowTimer -= dt;
@@ -34,11 +33,9 @@ public class AttackManager {
 
         for (AttackStrategy a : attacks) if (a.isActive()) a.update(dt, arena);
     }
-
     public void draw(SpriteBatch batch) {
         for (AttackStrategy a : attacks) if (a.isActive()) a.draw(batch);
     }
-
     public void checkHit(Tarro player) {
         // Daño solo si no está herido para evitar multihit
         if (player.estaHerido()) return;
@@ -50,7 +47,6 @@ public class AttackManager {
             }
         }
     }
-
     public void clearInactive() {
         for (int i = attacks.size - 1; i >= 0; --i)
             if (!attacks.get(i).isActive()) attacks.removeIndex(i);
@@ -63,7 +59,6 @@ public class AttackManager {
             a.setSpeedFactor(factor);
         }
     }
-
     public float getSpeedFactor() {
         return speedFactor;
     }

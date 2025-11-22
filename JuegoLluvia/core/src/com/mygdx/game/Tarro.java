@@ -19,9 +19,8 @@ public class Tarro {
 	   private boolean herido = false;
 	   private int tiempoHeridoMax = 50;
 	   private int tiempoHerido;
-
-
        private Rectangle limite;
+
     public Tarro(Texture tex, Sound ss) {
 		   bucketImage = tex;
            // Cambio que hicimos para suavizar el escalado
@@ -32,7 +31,7 @@ public class Tarro {
 		public int getVidas() {
 			return vidas;
 		}
-
+        public void setVidas(int vidas) {this.vidas = vidas;}
 		public int getPuntos() {
 			return puntos;
 		}

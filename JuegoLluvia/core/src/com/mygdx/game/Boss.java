@@ -9,37 +9,42 @@ import com.badlogic.gdx.utils.Timer;
 public class Boss extends BossTemplate {
 
     private float spawnCooldown = 0f;
-    private Texture texPaper, texPencil;
+    private Texture texPaper, texPencil, texGoma;
     private Sound paperSound, pencilSound, beamSound;
     private Rectangle zona;
+
     private AttackManager manager = AttackManager.getInstance();
+    private AttackSetFactory factory ;
 
     public Boss(Rectangle zona,
-                Texture texPaper, Texture texPencil,
+                Texture texPaper, Texture texPencil,  Texture texGoma,
                 Sound paperSound, Sound pencilSound, Sound beamSound) {
         this.zona = zona;
         this.texPaper = texPaper;
         this.texPencil = texPencil;
+        this.texGoma = texGoma;
         this.paperSound = paperSound;
         this.pencilSound = pencilSound;
         this.beamSound = beamSound;
+
+        factory = new Fase1AttackFactory(texPaper, texGoma, texPencil, zona) ;
     }
 
-    private void spawnPattern(float pencilChance, float diagonalChance, float sideChance) {
+    private void spawnPattern(float gomaChance, float diagonalChance, float sideChance) {
         float x = MathUtils.random(zona.x + 32, zona.x + zona.width - 32);
         float y = zona.y + zona.height - 32;
 
-        if (Math.random() < (1 - pencilChance)) {
-            PaperAttack p = new PaperAttack(texPaper, x, y, 0, -250);
+        if (Math.random() > (gomaChance)) {
+            Attack p = factory.createPaperAttack(x, y, 0, -250);
             p.setSpeedFactor(manager.getSpeedFactor());
             manager.spawn(p);
             paperSound.play(0.1f);
         } else {
-            spawnLapices(x, y, diagonalChance, sideChance);
+            spawnEraser(x, y, diagonalChance, sideChance);
         }
     }
 
-    private void spawnLapices(float x, float y, float diagonalChance, float sideChance) {
+    private void spawnEraser(float x, float y, float diagonalChance, float sideChance) {
         float vx = 0, vy = -400;
 
         if (MathUtils.randomBoolean(diagonalChance)) {
@@ -53,37 +58,42 @@ public class Boss extends BossTemplate {
             float ladoY = MathUtils.random(zona.y + 40f, zona.y + zona.height - 40f);
             vx = desdeIzq ? 300f : -300f;
             vy = 0;
-            PencilAttack p = new PencilAttack(texPencil, ladoX, ladoY, vx, vy);
-            p.setSpeedFactor(manager.getSpeedFactor());
-            manager.spawn(p);
+            Attack p = factory.createEraserAttack(ladoX, ladoY, vx, vy) ;
+            if (p != null){
+                p.setSpeedFactor(manager.getSpeedFactor());
+                manager.spawn(p);
+            }
         } else {
-            PencilAttack p = new PencilAttack(texPencil, x, y, vx, vy);
-            p.setSpeedFactor(manager.getSpeedFactor());
-            manager.spawn(p);
+            Attack p = factory.createEraserAttack(x, y, vx, vy);
+            if (p != null){
+                p.setSpeedFactor(manager.getSpeedFactor());
+                manager.spawn(p);
+            }
         }
-
         pencilSound.play(0.1f);
     }
 
     private void phase1(float x, float y) {
         // Papeles
-        PaperAttack p = new PaperAttack(texPaper, x, y, 0, -250);
+        Attack p = factory.createPaperAttack(x, y, 0, -250);
         p.setSpeedFactor(manager.getSpeedFactor());
         manager.spawn(p);
         paperSound.play(0.1f);
     }
 
     private void phase2(float x, float y) {
-        // Lapices y papeles
+        // Gomas y papeles
         spawnPattern(0.5f, 0.5f, 0.5f);
     }
 
     private void phase3(float x, float y) {
         // Lapices gigantes
         if (MathUtils.randomBoolean()) {
-            PencilBeamAttack p = new PencilBeamAttack(texPencil, zona, x, 56f, 0.6f, 0.6f, 3);
-            p.setSpeedFactor(manager.getSpeedFactor());
-            manager.spawn(p);
+            Attack beam = factory.createPencilAttack(x);
+            if (beam != null) {
+                beam.setSpeedFactor(manager.getSpeedFactor());
+                manager.spawn(beam);
+            }
             Timer.schedule(new Timer.Task() {
                 @Override
                 public void run() {
@@ -99,11 +109,20 @@ public class Boss extends BossTemplate {
     @Override
     protected void seleccionarFase(float time) {
         if (time > 100) { phase = 0; }
-        else if (time > 70) { phase = 3; }
+        else if (time > 70) {
+            phase = 3;
+            factory = new Fase3AttackFactory(texPaper, texGoma, texPencil, zona) ;
+        }
         else if (time > 65) { phase = 0; }
-        else if (time > 35) { phase = 2; }
+        else if (time > 35) {
+            phase = 2;
+            factory = new Fase2AttackFactory(texPaper, texGoma, texPencil, zona) ;
+        }
         else if (time > 30) { phase = 0; }
-        else phase = 1;
+        else{
+            phase = 1;
+            factory = new Fase1AttackFactory(texPaper, texGoma, texPencil, zona) ;
+        }
     }
 
     @Override
