@@ -149,7 +149,7 @@ public class JuegoLluvia extends ApplicationAdapter {
         stageMenu.addActor(table);
 
         //titulo del juego
-        Label titulo = new Label("JUEGO SINOMBRE", skin) ;
+        Label titulo = new Label("PAPERTALE", skin) ;
         titulo.setFontScale(4f) ;
         titulo.setColor(Color.WHITE) ;
         table.add(titulo).padBottom(40).row();
@@ -241,7 +241,7 @@ public class JuegoLluvia extends ApplicationAdapter {
         btnReintentar = new TextButton("Reintentar", skin);
         btnReintentar.getLabel().setFontScale(2f);
 
-        btnMenu = new TextButton("Menu", skin);
+        btnMenu = new TextButton("Volver", skin);
         btnMenu.getLabel().setFontScale(2f);
 
         tableGO.add(btnReintentar).width(400).height(90).pad(20).row();
@@ -263,6 +263,7 @@ public class JuegoLluvia extends ApplicationAdapter {
                 tarro.setVidas(20) ;
                 pickups.clear();
                 attackMgr.clearInactive() ;
+                boss.reset();
 
                 estado = Estado.JUEGO;
                 bgMusic.setPosition(0);
@@ -394,11 +395,13 @@ public class JuegoLluvia extends ApplicationAdapter {
                 font.draw(batch, "HP: " + tarro.getVidas() + "/20", 560, 100);
                 font.draw(batch, "Puntaje: " + score, 850, 100);
                 font.draw(batch, "Tiempo: " + (int) survived + "s", 1175, 100);
+                font.draw(batch, boss.getNombreFase(), 100, 1000) ;
 
                 if (tarro.getVidas() <= 0 || survived >= 120){ //Termina el juego si se acaban las vidas
                     estado = Estado.GAMEOVER;
                     if (bgMusic.isPlaying()) bgMusic.stop();
-                    Gdx.input.setInputProcessor(stageGameOver); //cambia al imput del menu, no se, me gustaría cambiarlo
+                    Gdx.input.setInputProcessor(stageGameOver);
+                    batch.end() ;
                     return ;
                 }
 
@@ -432,13 +435,13 @@ public class JuegoLluvia extends ApplicationAdapter {
 
             case GAMEOVER:
                 ScreenUtils.clear(0, 0, 0, 1);
-                batch.begin() ;
+                batch.begin() ; //linea 435
                 font.getData().setScale(4f);
-                font.draw(batch, "GAME OVER", 700, 800);
+                font.draw(batch, "GAME OVER", 635, 800);
 
-                font.getData().setScale(2f);
-                font.draw(batch, "Puntaje: " + score, 780, 500);
-                font.draw(batch, "Presiona 'Volver' para regresar al menú", 580, 400);
+                font.getData().setScale(1f);
+                font.draw(batch, "Puntaje: " + score, 860, 400);
+                font.draw(batch, "Presiona 'Volver' para regresar al menú", 620, 300);
                 batch.end();
 
                 stageGameOver.act(dt);

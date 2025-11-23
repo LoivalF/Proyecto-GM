@@ -145,5 +145,21 @@ public class Boss extends BossTemplate {
             }
         }
     }
+
+    public void reset(){
+        this.timer = 0f ;
+        this. phase = 1 ;
+        this.spawnCooldown = 0f ;
+        this.factory = new Fase1AttackFactory(texPaper, texGoma, texPencil, zona) ;
+    }
+
+    public String getNombreFase(){
+        switch(phase){
+            case 1: return "Jugando... Fase 1" ;
+            case 2: return "Jugando... Fase 2" ;
+            case 3: return "Jugando... Fase 3" ;
+            default: return "Preparando Fase" ;
+        }
+    }
 }
 
